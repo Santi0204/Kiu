@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kiu-db-secret
+type: Opaque
+data:
+  password: ZzhZZnZ1MmZLY3hYcUtPYnBKWnhqMjlT  # Base64 encoding
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kiu-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kiu-db
+  template:
+    metadata:
+      labels:
+        app: kiu-db
+    spec:
+      containers:
+      - name: kiu-db-container
+        image: postgres:14
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "db-kiu"
+        - name: POSTGRES_USER
+          value: "admin"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kiu-db-secret
+              key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiu-db-service
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: kiu-db
+  clusterIP: None

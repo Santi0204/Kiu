@@ -1,0 +1,102 @@
+###____Deploying and Scaling a Kubernetes Application with Terraform_____###
+
+Project Overview
+
+This project involves deploying a Kubernetes cluster on AWS using Terraform, deploying an application and a database, ensuring scalability, and securing the infrastructure following best practices.
+
+Architecture
+
+The architecture consists of:
+
+Amazon EKS (Kiu Cluster): Managed Kubernetes cluster to run the application.
+
+Amazon RDS (db-kiu): High-availability database (PostgreSQL/MySQL).
+
+Application Load Balancer (Kiu-LB): To expose the application publicly.
+
+VPC with Public and Private Subnets (Kiu-VPC): For security and network segmentation.
+
+Infrastructure Setup with Terraform
+
+1. Variables Configuration (kiu-variables.tf)
+
+Defines reusable variables for AWS configuration.
+
+2. Provider Configuration (kiu-provider.tf)
+
+Configures AWS as the provider for Terraform.
+
+3. Creating the VPC (kiu-vpc.tf)
+
+Creates the network resources including subnets and security groups.
+
+4. Deploying the EKS Cluster (kiu-eks.tf)
+
+Provisioning an Amazon EKS cluster named Kiu with the required subnets.
+
+5. Configuring the Database (kiu-rds.tf)
+
+Setting up Amazon RDS named db-kiu with high availability and security.
+
+6. Load Balancer Setup (kiu-lb.tf)
+
+Configuring an Application Load Balancer named Kiu-LB to expose the service.
+
+7. Desplegar la Aplicación (kiu-app-deployment.yaml)
+
+8. Desplegar la Base de Datos (kiu-db-deployment.yaml)
+
+9. Terra
+    terraform init
+    terraform plan
+    terraform apply -auto-approve
+
+# Autenticarse en ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 905418393821.dkr.ecr.us-east-1.amazonaws.com
+
+# Construir la imagen
+docker build -t kiu-app:latest .
+
+# Etiquetar la imagen para ECR
+docker tag kiu-app:latest 905418393821.dkr.ecr.us-east-1.amazonaws.com/kiu-app:latest
+
+# Subir la imagen a ECR
+docker push 905418393821.dkr.ecr.us-east-1.amazonaws.com/kiu-app:latest
+
+10. Kubectl
+    aws eks update-kubeconfig --region us-east-1 --name Kiu
+
+11. Deploy
+    kubectl apply -f kiu-app-deployment.yaml
+    kubectl apply -f kiu-db-deployment.yaml
+
+12. aws rds modify-db-instance --db-instance-identifier db-kiu --apply-immediately --allocated-storage 50
+
+
+13. kubectl scale deployment kiu-app --replicas=5
+14. kubectl get nodes
+
+NAME                         STATUS   ROLES    AGE   VERSION
+ip-10-0-1-189.ec2.internal   Ready    <none>   75s   v1.32.1-eks-5d632ec
+ip-10-0-2-110.ec2.internal   Ready    <none>   74s   v1.32.1-eks-5d632ec
+
+15. kubectl get pods -A
+NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE
+kube-system   aws-node-cxtdq             2/2     Running   0          93s
+kube-system   aws-node-m88wl             2/2     Running   0          92s
+kube-system   coredns-6b9575c64c-6gqhk   1/1     Running   0          21m
+kube-system   coredns-6b9575c64c-975r9   1/1     Running   0          21m
+kube-system   kube-proxy-84n5d           1/1     Running   0          92s
+kube-system   kube-proxy-nwrxv           1/1     Running   0          93s
+
+16. 
+default       kiu-app-7b968b57f8-jldq5   1/1     Running            0          3m46s
+default       kiu-app-7b968b57f8-kl5xh   1/1     Running            0          3m46s
+default       kiu-app-7b968b57f8-twls4   1/1     Running            0          3m46s
+default       kiu-db-7d8f76954-qnvf2     1/1     Running            0          3m21s
+kube-system   aws-node-cxtdq             2/2     Running            0          5m48s
+kube-system   aws-node-m88wl             2/2     Running            0          5m47s
+kube-system   coredns-6b9575c64c-6gqhk   1/1     Running            0          25m
+kube-system   coredns-6b9575c64c-975r9   1/1     Running            0          25m
+kube-system   kube-proxy-84n5d           1/1     Running            0          5m47s
+kube-system   kube-proxy-nwrxv           1/1     Running            0          5m48s

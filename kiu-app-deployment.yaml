@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kiu-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kiu-app
+  template:
+    metadata:
+      labels:
+        app: kiu-app
+    spec:
+      containers:
+      - name: kiu-app
+        image: 905418393821.dkr.ecr.us-east-1.amazonaws.com/kiu-app:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: DATABASE_URL
+          value: "postgres://admin:g8Yfvu2fKcxXqKObpJZxj29S@kiu-db:5432/db-kiu"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiu-app-service
+spec:
+  selector:
+    app: kiu-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
